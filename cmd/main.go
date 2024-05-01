@@ -265,7 +265,7 @@ func addBook(coll *mongo.Collection, book BookStore) int {
 func updateBook(coll *mongo.Collection, book BookStore) int {
 	update := bson.M{"$set": book}
 	filter := bson.M{"_id": book.ID}
-	res, err := coll.UpdateOne(context.TODO(), filter, update)
+	res, err := coll.UpdateMany(context.TODO(), filter, update)
 	fmt.Println(res.ModifiedCount)
 	if err != nil || res.ModifiedCount == 0 {
 		return 304
