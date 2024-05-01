@@ -249,11 +249,12 @@ func addBook(coll *mongo.Collection, book BookStore) int {
 		results = append(results, &elem)
 	}
 
-	fmt.Println(len(results))
+	fmt.Println("State 1")
 	if len(results) > 0 {
 		return 304
 	}
 
+	fmt.Println("State 2")
 	_, err = coll.InsertOne(context.TODO(), book)
 	if err != nil {
 		return 304
