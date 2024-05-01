@@ -227,6 +227,9 @@ func findAllYears(coll *mongo.Collection) []int {
 }
 
 func addBook(coll *mongo.Collection, book BookStore) int {
+	fmt.Print("\n")
+	fmt.Println(book)
+
 	filter := bson.M{"BookName": book.BookName,
 		"BookAuthor": book.BookAuthor,
 		"BookISBN":   book.BookISBN,
@@ -237,26 +240,25 @@ func addBook(coll *mongo.Collection, book BookStore) int {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Println("State 1")
 	if count > 0 {
 		return 304
 	}
-
-	fmt.Println("State 2")
 	_, err = coll.InsertOne(context.TODO(), book)
 	if err != nil {
+		fmt.Println("rejected")
+		fmt.Print("\n")
 		return 304
 	}
+
+	fmt.Println("inserted")
+	fmt.Print("\n")
 	return 200
 }
 
 func updateBook(coll *mongo.Collection, book BookStore) int {
-	fmt.Print(book)
 	update := bson.M{"$set": book}
 	filter := bson.M{"_id": book.ID}
 	res, err := coll.UpdateMany(context.TODO(), filter, update)
-	fmt.Println(res.ModifiedCount)
 	if err != nil || res.ModifiedCount == 0 {
 		return 299
 	}
