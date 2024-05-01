@@ -252,6 +252,7 @@ func addBook(coll *mongo.Collection, book BookStore) int {
 }
 
 func updateBook(coll *mongo.Collection, book BookStore) int {
+	fmt.Print(book)
 	update := bson.M{"$set": book}
 	filter := bson.M{"_id": book.ID}
 	res, err := coll.UpdateMany(context.TODO(), filter, update)
