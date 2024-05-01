@@ -272,13 +272,13 @@ func updateBook(coll *mongo.Collection, book BookStore) int {
 	return 200
 }
 
-func deleteBook(coll *mongo.Collection, id primitive.ObjectID) *mongo.DeleteResult {
-	filter := bson.M{"_id": id.Hex()}
+func deleteBook(coll *mongo.Collection, id primitive.ObjectID) int {
+	filter := bson.M{"_id": id}
 	result, err := coll.DeleteOne(context.TODO(), filter)
-	if err != nil {
-		panic(err)
+	if err != nil || result.DeletedCount == 0 {
+		return 304
 	}
-	return result
+	return 200
 }
 
 func main() {
@@ -444,8 +444,8 @@ func main() {
 		if err != nil {
 			return err
 		}
-		deleteBook(coll, objID)
-		return c.JSON(http.StatusOK, id)
+		ret := deleteBook(coll, objID)
+		return c.JSON(ret, objID)
 	})
 
 	e.Logger.Fatal(e.Start(":3030"))
