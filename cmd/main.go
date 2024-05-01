@@ -261,13 +261,15 @@ func addBook(coll *mongo.Collection, book BookStore) int {
 	return http.StatusOK
 }
 
-func updateBook(coll *mongo.Collection, book BookStore) {
+func updateBook(coll *mongo.Collection, book BookStore) int {
 	update := bson.M{"$set": book}
-	filter := bson.M{"_id": book.ID.Hex()}
-	_, err := coll.UpdateOne(context.TODO(), filter, update)
-	if err != nil {
-		panic(err)
+	filter := bson.M{"_id": book.ID}
+	res, err := coll.UpdateOne(context.TODO(), filter, update)
+	fmt.Println(res.ModifiedCount)
+	if err != nil || res.ModifiedCount == 0 {
+		return 304
 	}
+	return 200
 }
 
 func deleteBook(coll *mongo.Collection, id primitive.ObjectID) *mongo.DeleteResult {
@@ -417,8 +419,11 @@ func main() {
 		var author string = data["author"].(string)
 		var pages int = int(data["pages"].(float64))
 		var year int = int(data["year"].(float64))
-		var isbn string = data["isbn"].(string)
-		var id primitive.ObjectID = data["id"].(primitive.ObjectID)
+		id, err := primitive.ObjectIDFromHex(data["id"].(string))
+		var isbn string = ""
+		if _, ok := data["isbn"]; ok {
+			isbn = data["isbn"].(string)
+		}
 
 		book := BookStore{
 			BookName:   name,
@@ -429,8 +434,8 @@ func main() {
 			ID:         id,
 		}
 
-		updateBook(coll, book)
-		return c.JSON(http.StatusOK, book)
+		ret := updateBook(coll, book)
+		return c.JSON(ret, book)
 	})
 
 	e.DELETE("/api/books/:id", func(c echo.Context) error {
