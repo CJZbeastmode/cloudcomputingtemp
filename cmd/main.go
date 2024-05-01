@@ -233,13 +233,28 @@ func addBook(coll *mongo.Collection, book BookStore) int {
 		"BookPages":  book.BookPages,
 		"BookYear":   book.BookYear}
 
-	count, err := coll.CountDocuments(context.TODO(), filter)
+	var results []*BookStore
+	cursor, err := coll.Find(context.TODO(), filter)
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer cursor.Close(context.TODO())
+
+	if err = cursor.All(context.TODO(), &results); err != nil {
+		panic(err)
+	}
+
+	for cursor.Next(context.TODO()) {
+		var elem BookStore
+		err := cursor.Decode(&elem)
+		if err != nil {
+			log.Fatal(err)
+		}
+		results = append(results, &elem)
+	}
 
 	fmt.Println("State 1")
-	if count > 0 {
+	if len(results) > 0 {
 		return 304
 	}
 
