@@ -240,10 +240,6 @@ func addBook(coll *mongo.Collection, book BookStore) int {
 	}
 	defer cursor.Close(context.TODO())
 
-	if err = cursor.All(context.TODO(), &results); err != nil {
-		panic(err)
-	}
-
 	for cursor.Next(context.TODO()) {
 		var elem BookStore
 		err := cursor.Decode(&elem)
