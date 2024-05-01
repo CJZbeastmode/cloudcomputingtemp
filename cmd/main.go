@@ -251,7 +251,7 @@ func addBook(coll *mongo.Collection, book BookStore) int {
 
 	fmt.Println(len(results))
 	if len(results) > 0 {
-		return http.StatusBadRequest
+		return 304
 	}
 
 	_, err = coll.InsertOne(context.TODO(), book)
@@ -261,7 +261,7 @@ func addBook(coll *mongo.Collection, book BookStore) int {
 	return http.StatusOK
 }
 
-func updateBook(coll *mongo.Collection, book *BookStore) {
+func updateBook(coll *mongo.Collection, book BookStore) {
 	update := bson.M{"$set": book}
 	filter := bson.M{"_id": book.ID.Hex()}
 	_, err := coll.UpdateOne(context.TODO(), filter, update)
@@ -379,7 +379,10 @@ func main() {
 		var author string = data["author"].(string)
 		var pages int = int(data["pages"].(float64))
 		var year int = int(data["year"].(float64))
-		var isbn string = data["isbn"].(string)
+		var isbn string = ""
+		if _, ok := data["isbn"]; ok {
+			isbn = data["isbn"].(string)
+		}
 
 		book := BookStore{
 			BookName:   name,
@@ -390,18 +393,42 @@ func main() {
 		}
 
 		ret := addBook(coll, book)
-		if ret == http.StatusBadRequest {
+		if ret == 304 {
 			return c.JSON(ret, "bad")
 		}
 		return c.JSON(ret, book)
 	})
 
 	e.PUT("/api/books", func(c echo.Context) error {
-		book := new(BookStore)
-		err := c.Bind(book)
+		body, err := ioutil.ReadAll(c.Request().Body)
 		if err != nil {
 			return err
 		}
+		defer c.Request().Body.Close()
+
+		var data map[string]interface{}
+		err = json.Unmarshal(body, &data)
+
+		if err != nil {
+			return err
+		}
+
+		var name string = data["name"].(string)
+		var author string = data["author"].(string)
+		var pages int = int(data["pages"].(float64))
+		var year int = int(data["year"].(float64))
+		var isbn string = data["isbn"].(string)
+		var id primitive.ObjectID = data["id"].(primitive.ObjectID)
+
+		book := BookStore{
+			BookName:   name,
+			BookAuthor: author,
+			BookPages:  pages,
+			BookYear:   year,
+			BookISBN:   isbn,
+			ID:         id,
+		}
+
 		updateBook(coll, book)
 		return c.JSON(http.StatusOK, book)
 	})

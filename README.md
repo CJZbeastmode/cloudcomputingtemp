@@ -84,3 +84,5 @@ db.createUser({user: "mongodb", pwd: "testmongo", roles: [{ role: "userAdminAnyD
 mongosh --port 27017 --authenticationDatabase "admin"\ -u "mongodb" -p 
 
 mongosh --port 27017 -u "mongodb" -p "testmongo" --authenticationDatabase "admin"# cloudcomputingtemp
+
+http://130.211.96.50:3030
