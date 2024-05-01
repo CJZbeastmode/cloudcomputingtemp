@@ -24,11 +24,11 @@ import (
 // frontend or the database
 type BookStore struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
-	BookName   string
-	BookAuthor string
-	BookISBN   string
-	BookPages  int
-	BookYear   int
+	BookName   string             `bson:"BookName"`
+	BookAuthor string             `bson:"BookAuthor"`
+	BookISBN   string             `bson:"BookISBN"`
+	BookPages  int                `bson:"BookPages"`
+	BookYear   int                `bson:"BookYear"`
 }
 
 // Wraps the "Template" struct to associate a necessary method
@@ -184,7 +184,7 @@ func findAllBooksWithYears(coll *mongo.Collection) []map[string]interface{} {
 	var ret []map[string]interface{}
 	for _, res := range results {
 		ret = append(ret, map[string]interface{}{
-			"ID":         res.ID.Hex(),
+			"ID":         res.ID,
 			"BookName":   res.BookName,
 			"BookAuthor": res.BookAuthor,
 			"BookISBN":   res.BookISBN,
@@ -226,17 +226,39 @@ func findAllYears(coll *mongo.Collection) []int {
 	return ret
 }
 
-func addBook(coll *mongo.Collection, book BookStore) {
-	//filter := bson.M{"_id": book.ID}
-	//b := coll.FindOne(context.TODO(), filter)
-	//if b != nil {
-	//	return
-	//}
+func addBook(coll *mongo.Collection, book BookStore) int {
+	filter := bson.M{"BookName": book.BookName,
+		"BookAuthor": book.BookAuthor,
+		"BookISBN":   book.BookISBN,
+		"BookPages":  book.BookPages,
+		"BookYear":   book.BookYear}
 
-	_, err := coll.InsertOne(context.TODO(), book)
+	var results []*BookStore
+	cursor, err := coll.Find(context.TODO(), filter)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer cursor.Close(context.TODO())
+
+	for cursor.Next(context.TODO()) {
+		var elem BookStore
+		err := cursor.Decode(&elem)
+		if err != nil {
+			log.Fatal(err)
+		}
+		results = append(results, &elem)
+	}
+
+	fmt.Println(len(results))
+	if len(results) > 0 {
+		return http.StatusBadRequest
+	}
+
+	_, err = coll.InsertOne(context.TODO(), book)
 	if err != nil {
 		panic(err)
 	}
+	return http.StatusOK
 }
 
 func updateBook(coll *mongo.Collection, book *BookStore) {
@@ -333,7 +355,8 @@ func main() {
 				"name":   res["BookName"],
 				"author": res["BookAuthor"],
 				"pages":  res["BookPages"],
-				"year":   res["BookYear"]})
+				"year":   res["BookYear"],
+				"isbn":   res["BookISBN"]})
 		}
 		return c.JSON(http.StatusOK, ret)
 	})
@@ -366,11 +389,11 @@ func main() {
 			BookISBN:   isbn,
 		}
 
-		fmt.Print(book)
-		fmt.Print("\n")
-
-		addBook(coll, book)
-		return c.JSON(http.StatusOK, '1')
+		ret := addBook(coll, book)
+		if ret == http.StatusBadRequest {
+			return c.JSON(ret, "bad")
+		}
+		return c.JSON(ret, book)
 	})
 
 	e.PUT("/api/books", func(c echo.Context) error {
