@@ -227,19 +227,11 @@ func findAllYears(coll *mongo.Collection) []int {
 }
 
 func addBook(coll *mongo.Collection, book BookStore) int {
-	filter := bson.M{}
-	if book.BookISBN == "" {
-		filter = bson.M{"BookName": book.BookName,
-			"BookAuthor": book.BookAuthor,
-			"BookPages":  book.BookPages,
-			"BookYear":   book.BookYear}
-	} else {
-		filter = bson.M{"BookName": book.BookName,
-			"BookAuthor": book.BookAuthor,
-			"BookISBN":   book.BookISBN,
-			"BookPages":  book.BookPages,
-			"BookYear":   book.BookYear}
-	}
+	filter := bson.M{"BookName": book.BookName,
+		"BookAuthor": book.BookAuthor,
+		"BookISBN":   book.BookISBN,
+		"BookPages":  book.BookPages,
+		"BookYear":   book.BookYear}
 
 	count, err := coll.CountDocuments(context.TODO(), filter)
 	if err != nil {
@@ -265,7 +257,7 @@ func updateBook(coll *mongo.Collection, book BookStore) int {
 	res, err := coll.UpdateMany(context.TODO(), filter, update)
 	fmt.Println(res.ModifiedCount)
 	if err != nil || res.ModifiedCount == 0 {
-		return 304
+		return 299
 	}
 	return 200
 }
@@ -274,7 +266,7 @@ func deleteBook(coll *mongo.Collection, id primitive.ObjectID) int {
 	filter := bson.M{"_id": id}
 	result, err := coll.DeleteOne(context.TODO(), filter)
 	if err != nil || result.DeletedCount == 0 {
-		return 304
+		return 299
 	}
 	return 200
 }
