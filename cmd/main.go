@@ -244,6 +244,15 @@ func addBook(coll *mongo.Collection, book BookStore) int {
 		panic(err)
 	}
 
+	for cursor.Next(context.TODO()) {
+		var elem BookStore
+		err := cursor.Decode(&elem)
+		if err != nil {
+			log.Fatal(err)
+		}
+		results = append(results, &elem)
+	}
+
 	fmt.Println("State 1")
 	if len(results) > 0 {
 		return 304
