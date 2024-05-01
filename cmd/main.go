@@ -256,21 +256,34 @@ func addBook(coll *mongo.Collection, book BookStore) int {
 }
 
 func updateBook(coll *mongo.Collection, book BookStore) int {
+	fmt.Print("\n")
+	fmt.Println(book)
 	update := bson.M{"$set": book}
 	filter := bson.M{"_id": book.ID}
 	res, err := coll.UpdateMany(context.TODO(), filter, update)
 	if err != nil || res.ModifiedCount == 0 {
+		fmt.Println("update rejected")
+		fmt.Print("\n")
 		return 299
 	}
+	fmt.Println("updated")
+	fmt.Print("\n")
 	return 200
 }
 
 func deleteBook(coll *mongo.Collection, id primitive.ObjectID) int {
 	filter := bson.M{"_id": id}
+	res := coll.FindOne(context.TODO(), filter)
+	fmt.Print("\n")
+	fmt.Println(res)
 	result, err := coll.DeleteOne(context.TODO(), filter)
 	if err != nil || result.DeletedCount == 0 {
+		fmt.Println("delete rejected")
+		fmt.Print("\n")
 		return 299
 	}
+	fmt.Println("deleted")
+	fmt.Print("\n")
 	return 200
 }
 
