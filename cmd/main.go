@@ -256,9 +256,9 @@ func addBook(coll *mongo.Collection, book BookStore) int {
 
 	_, err = coll.InsertOne(context.TODO(), book)
 	if err != nil {
-		panic(err)
+		return 304
 	}
-	return http.StatusOK
+	return 200
 }
 
 func updateBook(coll *mongo.Collection, book BookStore) int {
